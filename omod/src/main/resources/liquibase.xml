@@ -1,0 +1,375 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog/1.9"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog/1.9
+	http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-1.9.xsd">
+
+	<!-- See http://wiki.openmrs.org/display/docs/Module+liquibase+File for 
+		documentation on this file. See http://www.liquibase.org/manual/home#available_database_refactorings 
+		for a list of supported elements and attributes -->
+
+
+	<changeSet id="mfl-2012-04-05-12:45" author="omwalo">
+		<preConditions onFail="MARK_RAN">
+			<not>
+				<tableExists tableName="mfl_location" />
+			</not>
+		</preConditions>
+		<comment>
+			Creating the mfl_location table
+		</comment>
+
+		<createTable tableName="mfl_location">
+
+			<column name="mfl_location_id" type="int(11)">
+				<constraints primaryKey="true" nullable="false" />
+			</column>
+			
+			<column name="location_id" type="int(11)">
+				<constraints nullable="false" />
+			</column>
+			<column name="mfl"  type="int(11)" >
+				
+			</column>
+
+			<column name="creator" type="int(11)" defaultValue="0">
+				<constraints nullable="false" />
+			</column>
+
+			<column name="datecreated" type="datetime">
+				<constraints nullable="true" />
+			</column>
+
+			<column name="voided" type="smallint(6)" defaultValue="0">
+				<constraints nullable="false" />
+			</column>
+
+			<column name="voided_by" type="int(11)">
+				<constraints nullable="true" />
+			</column>
+
+			<column name="date_voided" type="datetime">
+				<constraints nullable="true" />
+			</column>
+
+			<column name="void_reason" type="varchar(255)">
+				<constraints nullable="true" />
+			</column>
+
+			<column name="uuid" type="char(38)">
+				<constraints nullable="false" />
+			</column>
+		</createTable>
+		
+		<createIndex tableName="mfl_location" indexName="uuid">
+			<column name="uuid" />
+		</createIndex>
+	</changeSet>
+
+	<changeSet id="mfl-2012-04-05-12:55" author="omwalo">
+		<addAutoIncrement tableName="mfl_location"
+			columnName="mfl_location_id" columnDataType="int" />
+	</changeSet>
+
+	<changeSet id="mfl-2012-04-05-12:58" author="omwalo">
+		<preConditions onFail="MARK_RAN">
+			<not>
+				<tableExists tableName="mfl_count" />
+			</not>
+		</preConditions>
+		<comment>
+			Creating the mfl_count table
+		</comment>
+
+		<createTable tableName="mfl_count">
+
+			<column name="mfl_count_id" type="int(11)">
+				<constraints primaryKey="true" nullable="false" />
+			</column>
+			<column name="mfl" type="int(11)" />
+
+			<column name="last_count" type="int(11)" defaultValue="0">
+				<constraints nullable="false" />
+			</column>
+
+			<column name="creator" type="int(11)" defaultValue="0">
+				<constraints nullable="false" />
+			</column>
+			<column name="datecreated" type="datetime">
+				<constraints nullable="true" />
+			</column>
+
+			<column name="voided" type="smallint(6)" defaultValue="0">
+				<constraints nullable="false" />
+			</column>
+
+			<column name="voided_by" type="int(11)">
+				<constraints nullable="true" />
+			</column>
+
+			<column name="date_voided" type="datetime">
+				<constraints nullable="true" />
+			</column>
+
+			<column name="void_reason" type="varchar(255)">
+				<constraints nullable="true" />
+			</column>
+
+			<column name="uuid" type="char(38)">
+				<constraints nullable="false" />
+			</column>
+
+
+
+		</createTable>
+		<createIndex tableName="mfl_count" indexName="uuid">
+			<column name="uuid" />
+		</createIndex>
+	</changeSet>
+
+
+
+	<changeSet id="mfl-2012-04-05-13:03" author="omwalo">
+		<addAutoIncrement tableName="mfl_count"
+			columnName="mfl_count_id" columnDataType="int" />
+	</changeSet>
+
+
+ <changeSet id="mfl-2012-04-05-13:11" author="omwalo">
+		<preConditions onFail="MARK_RAN">
+		
+			<dbms type="mysql" />
+				
+		
+		</preConditions>
+		<comment>Generating UUID row in mfl_location table via built in uuid function.</comment>
+		<update tableName="mfl_location">
+			<column name="uuid" valueNumeric="name-of-uuid-function" />
+			<where>uuid is null</where>
+		</update>
+		<modifySql dbms="mysql">
+			<replace replace="name-of-uuid-function" with="UUID()" />
+		</modifySql>
+		
+	</changeSet>
+
+
+
+	<changeSet id="pharmacy-2012-01-31-5:44" author="omwalo">
+		<preConditions onFail="MARK_RAN">
+			
+			<dbms type="mysql" />
+			
+		</preConditions>
+		<comment>Generating UUID row in mfl_count table via built in uuid function.</comment>
+		<update tableName="mfl_count">
+			<column name="uuid" valueNumeric="name-of-uuid-function" />
+			<where>uuid is null</where>
+		</update>
+		<modifySql dbms="mysql">
+			<replace replace="name-of-uuid-function" with="UUID()" />
+		</modifySql>
+		
+	</changeSet>
+	
+	<changeSet author="ningosi" id="19:04:2012:12:45:90:90">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="mfl_location" columnName="changed_by"/>
+            </not>
+
+        </preConditions>
+		<addColumn tableName="mfl_location">
+			<column name="changed_by" type="int(11)">
+				<constraints nullable="true" />
+			</column>
+		</addColumn>
+	</changeSet>
+	
+	<changeSet author="ningosi" id="19:04:2012:12:56">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="mfl_location" columnName="date_changed"/>
+            </not>
+
+        </preConditions>
+		<addColumn tableName="mfl_location">
+			<column name="date_changed" type="datetime">
+				<constraints nullable="true" />
+			</column>
+		</addColumn>
+	</changeSet>
+	<changeSet author="ningosi" id="19:04:2012:17:28">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="mfl_location" columnName="changed_by"/>
+            </not>
+
+        </preConditions>
+		<addColumn tableName="mfl_count">
+			<column name="changed_by" type="int(11)">
+				<constraints nullable="true" />
+			</column>
+		</addColumn>
+	</changeSet>
+	
+	<changeSet author="ningosi" id="19:04:2012:17:27">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="mfl_location" columnName="date_changed"/>
+            </not>
+
+        </preConditions>
+		<addColumn tableName="mfl_count">
+			<column name="date_changed" type="datetime">
+				<constraints nullable="true" />
+			</column>
+		</addColumn>
+	</changeSet>
+	
+
+	<!-- foreign keys -->
+
+	<changeSet id="mfl-2012-04-05-13:14" author="omwalo">
+		<preConditions onFail="MARK_RAN">
+			<not>
+				<foreignKeyConstraintExists
+					foreignKeyName="location_id" />
+			</not>
+
+		</preConditions>
+	<addForeignKeyConstraint constraintName="location_id_fk"
+			baseTableName="mfl_location" baseColumnNames="location_id"
+			referencedTableName="location" referencedColumnNames="location_id" />
+
+	</changeSet>
+	
+		<changeSet author="ningosi" id="19:04:2012:12:10">
+                <preConditions onFail="MARK_RAN">
+                        <not>
+                                <indexExists indexName="user_who_created_mflLocation"/>
+                        </not>
+                </preConditions>
+                <comment>Creating index user_who_created_mflLocation</comment>
+                <createIndex tableName="mfl_location" indexName="user_who_created_mflLocation">
+                                <column name="creator" />
+                </createIndex>
+        </changeSet>     
+        <changeSet author="ningosi" id="19:04:2012:12:12">
+                <preConditions onFail="MARK_RAN">
+                        <not>
+                                <indexExists indexName="user_who_voided_mflLocation"/>
+                        </not>
+                </preConditions>
+                <comment>Creating index user_who_voided_mflLocation</comment>
+                <createIndex tableName="mfl_location" indexName="user_who_voided_mflLocation">
+                                <column name="voided_by" />
+                </createIndex>
+        </changeSet>
+        <changeSet author="ningosi" id="19:04:2012:12:37">
+                <preConditions onFail="MARK_RAN">
+                        <not>
+                                <indexExists indexName="user_who_changed_mflLocation"/>
+                        </not>
+                </preConditions>
+                <comment>Creating index user_who_changed_mflLocation</comment>
+                <createIndex tableName="mfl_location" indexName="user_who_changed_mflLocation">
+                                <column name="changed_by" />
+                </createIndex>
+        </changeSet>
+        
+        <!--
+        
+        
+        creation of foreign keys for 
+	
+-->
+
+	<changeSet author="ningosi" id="19:04:2012:12:15">
+                <preConditions onFail="MARK_RAN">
+                        <not>
+                                <foreignKeyConstraintExists foreignKeyName="user_who_created_mflLocation_fk"/>
+                        </not>
+                </preConditions>
+                <comment> creating user_who_created_mflLocation_fk foreign keys</comment>
+                
+                        <addForeignKeyConstraint constraintName="user_who_created_mflLocation_fk"
+                                        baseTableName="mfl_location" baseColumnNames="creator"
+                                        referencedTableName="users" referencedColumnNames="user_id" />
+      </changeSet>
+
+        <changeSet author="ningosi" id="19:04:2012:12:17:9090">
+                <preConditions onFail="MARK_RAN">
+                        <not>
+                                <foreignKeyConstraintExists foreignKeyName="user_who_voided_mflLocation_fk"/>
+                        </not>
+                </preConditions>
+                <comment> creating user_who_voided_mflLocation_fk foreign keys</comment>
+                        <addForeignKeyConstraint constraintName="user_who_voided_mflLocation_fk"
+                                        baseTableName="mfl_location" baseColumnNames="voided_by"
+                                        referencedTableName="users" referencedColumnNames="user_id" />
+        </changeSet>
+        <changeSet author="ningosi" id="19:04:2012:12:38">
+                <preConditions onFail="MARK_RAN">
+                        <not>
+                                <foreignKeyConstraintExists foreignKeyName="user_who_changed_mflLocation_fk"/>
+                        </not>
+                </preConditions>
+                <comment> creating user_who_changed_mflLocation_fk foreign keys</comment>
+                        <addForeignKeyConstraint constraintName="user_who_changed_mflLocation_fk"
+                                        baseTableName="mfl_location" baseColumnNames="changed_by"
+                                        referencedTableName="users" referencedColumnNames="user_id" />
+        </changeSet>
+
+<!-- ===================================================================================================== -->
+<changeSet author="ningosi" id="19:04:2012:17:22">
+                <preConditions onFail="MARK_RAN">
+                        <not>
+                                <foreignKeyConstraintExists foreignKeyName="user_who_created_mfl_count_fk"/>
+                        </not>
+                </preConditions>
+                <comment> creating user_who_created_mfl_count_fk foreign keys</comment>
+                
+                        <addForeignKeyConstraint constraintName="user_who_created_mfl_count_fk"
+                                        baseTableName="mfl_count" baseColumnNames="creator"
+                                        referencedTableName="users" referencedColumnNames="user_id" />
+      </changeSet>
+
+        <changeSet author="ningosi" id="19:04:2012:17:24">
+                <preConditions onFail="MARK_RAN">
+                        <not>
+                                <foreignKeyConstraintExists foreignKeyName="user_who_voided_mfl_count_fk"/>
+                        </not>
+                </preConditions>
+                <comment> creating user_who_voided_mfl_count_fk foreign keys</comment>
+                        <addForeignKeyConstraint constraintName="user_who_voided_mfl_count_fk"
+                                        baseTableName="mfl_count" baseColumnNames="voided_by"
+                                        referencedTableName="users" referencedColumnNames="user_id" />
+        </changeSet>
+        <changeSet author="ningosi" id="19:04:2012:17:25">
+                <preConditions onFail="MARK_RAN">
+                        <not>
+                                <foreignKeyConstraintExists foreignKeyName="user_who_changed_mfl_count_fk"/>
+                        </not>
+                </preConditions>
+                <comment> creating user_who_changed_mfl_count_fk foreign keys</comment>
+                        <addForeignKeyConstraint constraintName="user_who_changed_mfl_count_fk"
+                                        baseTableName="mfl_count" baseColumnNames="changed_by"
+                                        referencedTableName="users" referencedColumnNames="user_id" />
+        </changeSet>
+
+    <!--additional code to add location column on the mfl_count table-->
+    <changeSet author="ningosi" id="25:07:2012:12:30:20">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="mfl_count" columnName="location_id"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="mfl_count">
+            <column name="location_id" type="int(11)">
+                <constraints nullable="true" />
+            </column>
+        </addColumn>
+    </changeSet>
+
+    </databaseChangeLog>
