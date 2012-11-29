@@ -35,7 +35,7 @@
             <dependency>
                 <groupId>org.openmrs.module</groupId>
                 <artifactId>serialization.xstream-api</artifactId>
-                <version>0.2.6-SNAPSHOT</version>
+                <version>0.2.7</version>
                 <scope>provided</scope>
             </dependency>
 
