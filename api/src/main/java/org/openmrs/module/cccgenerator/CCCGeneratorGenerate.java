@@ -2,198 +2,92 @@ package org.openmrs.module.cccgenerator;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.openmrs.*;
-import org.openmrs.api.AdministrationService;
-import org.openmrs.api.EncounterService;
-import org.openmrs.api.LocationService;
-import org.openmrs.api.PatientService;
+import org.openmrs.Location;
+import org.openmrs.Patient;
+import org.openmrs.PatientIdentifier;
+import org.openmrs.PatientIdentifierType;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.cccgenerator.model.CCCCount;
 import org.openmrs.module.cccgenerator.model.CCCLocation;
 import org.openmrs.module.cccgenerator.service.CCCGeneratorService;
 
-import java.util.*;
+import java.util.Map;
+import java.util.Set;
 
 /**
- * Created with IntelliJ IDEA.
- * User: Nicholas Ingosi Magaja
- * Date: 5/25/12
- * Time: 12:34 PM
- * To change this template use File | Settings | File Templates.
- *
+ * Generator for CCC numbers
  */
 public class CCCGeneratorGenerate {
 
-    private final Log log = LogFactory.getLog(getClass());
+	private final Log log = LogFactory.getLog(getClass());
 
-    public static final String ENCOUNTER_TYPE_ADULT_RETURN = "ADULTRETURN";
-    public static final String ENCOUNTER_TYPE_ADULT_INITIAL = "ADULTINITIAL";
-    public static final String ENCOUNTER_TYPE_PEDS_INITIAL = "PEDSINITIAL";
-    public static final String ENCOUNTER_TYPE_PEDS_RETURN = "PEDSRETURN";
+	public void generateCCCNumbers() {
 
+		CCCGeneratorService service = Context.getService(CCCGeneratorService.class);
 
-    public void processCCCS(){
+		// get the patient identifier type for use in our generating
+		String pitName = Context.getAdministrationService().getGlobalProperty("cccgenerator.CCC");
+		PatientIdentifierType pit = Context.getPatientService().getPatientIdentifierTypeByName(pitName);
 
-        CCCGeneratorService service= Context.getService(CCCGeneratorService.class);
+		// get enrolled HIV patients, grouped by location
+		Map<Location, Set<Integer>> locationPatientMap = service.getLocationPatientMap();
 
-        EncounterService encounterservice=Context.getEncounterService();
-        AdministrationService adminservice=Context.getAdministrationService();
-        PatientService pService=Context.getPatientService();
-        LocationService locservice=Context.getLocationService();
+		long count = 0;
 
+		// iterate through locations
+		for (Location location: locationPatientMap.keySet()) {
 
-        Integer CCC=0;
-        Integer lastcount=0;
-        String CCCIdentifier="";
-        String glbCCC="";
-        int number_of_hiv_patients_affected = 0;
-        int number_of_hiv_patients_affected_generated = 0;
+			// if a facility code exists for that location ...
+			CCCLocation facility = service.getCCCLocationByLocation(location);
+			if (facility != null) {
 
+				Integer prefix = facility.getCCC();
 
+				// get the next serial for this facility
+				CCCCount counter = service.getCCCCountByCCC(prefix);
+				Integer serial = counter.getLastCount() + 1;
 
+				// cycle through people to set identifiers
+				for (Integer patientId : locationPatientMap.get(location)) {
 
+					// get the patient
+					Patient patient = Context.getPatientService().getPatient(patientId);
 
-        //cohort to return all patient ids
+					// only do something if the patient is valid
+					if (patient != null && !patient.isVoided()) {
 
-        log.info("Just entered in the whenpage loads");
+						// create a new identifier
+						PatientIdentifier pi = new PatientIdentifier();
+						pi.setIdentifierType(pit);
+						pi.setIdentifier(String.format("%05d-%05d", prefix, serial++));
+						pi.setLocation(location);
+						pi.setPatient(patient);
 
-        Cohort listOpPatientId=service.getAllHIVPatients();
+						// add it to the patient
+						patient.addIdentifier(pi);
 
+						// save and move on
+						Context.getPatientService().savePatient(patient);
 
+						cleanup(count++);
+					}
+				}
 
-        log.info(listOpPatientId.size()+"  HIV Patients found");
+				// update the serial for this facility
+				counter = service.getCCCCountByCCC(prefix);
+				counter.setLastCount(serial);
 
-        //provide a set to hold all the ids from the cohort
-        Set<Integer> patientsIds=new HashSet<Integer>(listOpPatientId.getMemberIds());
+				// save and move on
+				service.saveCCCCount(counter);
+			}
+		}
+	}
 
-
-        //map.addAttribute("patientsIds", patientsIds.size());
-
-
-        Patient patients;
-
-
-
-        for(Integer patientId:patientsIds){
-
-            patients=pService.getPatient(patientId);
-
-            //log.info(patients.getNames());
-
-            List<Encounter> listOfEncounters=encounterservice.getEncountersByPatientId(patientId);
-
-            Collections.sort(listOfEncounters, new SortEncountersByDateComparator());
-
-
-
-            for(Encounter encounters:listOfEncounters){
-
-                if(encounters.getEncounterType().getName().equals(ENCOUNTER_TYPE_ADULT_INITIAL)
-                        ||encounters.getEncounterType().getName().equals(ENCOUNTER_TYPE_ADULT_RETURN)
-                        ||encounters.getEncounterType().getName().equals(ENCOUNTER_TYPE_PEDS_INITIAL)
-                        ||encounters.getEncounterType().getName().equals(ENCOUNTER_TYPE_PEDS_RETURN)){
-                    //
-                    //get a list of all the CCCloation table ie the codes entered for every facility
-                    List<CCCLocation> mllist=service.getAllCCCLocations();
-
-                    for(CCCLocation CCClocation:mllist){
-
-                        //check if our location/site tallies with ones from the encounters given above
-                        if(CCClocation.getLocation()==encounters.getLocation()){
-
-                            CCCLocation ml=service.getCCCLocationByLocation(encounters.getLocation());
-
-                            //we pick the unique number for every facility
-                            CCC=ml.getCCC();
-
-
-                            //using CCC above we check for the last count
-                            CCCCount mc=service.getCCCCountByCCC(CCC);
-                            lastcount=mc.getLastCount();
-
-                            //we increament the count by one
-
-
-                            lastcount++;
-                            String pCCCIdentifier=""+lastcount;
-
-                            //check for the number of digits required to be concatnated to facility number
-                            if(pCCCIdentifier.length() < 5){
-                                int x=5-pCCCIdentifier.length();
-                                String y="";
-                                for(int k=0;k<x;k++)
-                                    y +="0";
-                                pCCCIdentifier =y+pCCCIdentifier;
-                            }
-                            CCCIdentifier=CCC+"-"+pCCCIdentifier;
-
-                            glbCCC=adminservice.getGlobalProperty("cccgenerator.CCC");//getGlobalProperty("cccgenerator.CCC");
-
-                            PatientIdentifierType patientIdentifierType=pService.getPatientIdentifierTypeByName(glbCCC);
-
-                            PatientIdentifier patientIdentifier=new PatientIdentifier();
-
-
-                            patientIdentifier.setPatient(patients);
-                            patientIdentifier.setIdentifier(CCCIdentifier);
-                            patientIdentifier.setIdentifierType(patientIdentifierType);
-                            patientIdentifier.setLocation(locservice.getLocation(encounters.getLocation().getLocationId()));
-                            patientIdentifier.setPreferred(false);
-
-                            mc.setLastCount(lastcount);
-                            //save the count thereby rewriting the previous one
-                            service.saveCCCCount(mc);
-                            //add and save patient identifier
-                            pService.savePatientIdentifier(patientIdentifier);
-
-                            number_of_hiv_patients_affected +=1;
-
-                            number_of_hiv_patients_affected_generated += number_of_hiv_patients_affected;
-
-                            cleanupaftersaving(number_of_hiv_patients_affected);
-
-
-                        }
-
-
-
-                    }
-
-
-                }
-
-                break;
-
-
-            }
-
-
-        }
-
-
-    }
-
-
-
-    private static class SortEncountersByDateComparator implements Comparator<Object> {
-
-        //@Override
-        public int compare(Object a, Object b) {
-            Encounter ae = (Encounter) a;
-            Encounter be = (Encounter) b;
-            return ae.getEncounterDatetime().compareTo(be.getEncounterDatetime());
-        }
-    }
-
-    private void cleanupaftersaving(int count){
-
-        if(count % 10 == 0){
-            Context.flushSession();
-            Context.clearSession();
-        }
-
-    }
-
-
+	private void cleanup(long count) {
+		if (count % 10 == 0) {
+			Context.flushSession();
+			Context.clearSession();
+		}
+	}
 }
 

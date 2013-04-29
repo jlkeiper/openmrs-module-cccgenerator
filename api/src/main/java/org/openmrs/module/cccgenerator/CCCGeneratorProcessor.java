@@ -4,25 +4,21 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * Created with IntelliJ IDEA.
- * User: Nicholas Ingosi Magaja
- * Date: 5/25/12
- * Time: 12:29 PM
- * To change this template use File | Settings | File Templates.
+ * Processor for CCC number generation
  */
 public class CCCGeneratorProcessor {
 
-    private static final Log log = LogFactory.getLog(CCCGeneratorProcessor.class);
+	private static final Log log = LogFactory.getLog(CCCGeneratorProcessor.class);
 
-    private CCCGeneratorGenerate CCCGeneratorProcessor  = null;
+	private CCCGeneratorGenerate CCCGeneratorProcessor = null;
 
-    public void processCCCGenerator() {
+	public void processCCCGenerator() {
 
-        log.debug("Processing and creating CCCS");
+		log.debug("Processing and creating CCC numbers");
 
-        if (CCCGeneratorProcessor == null)
-            CCCGeneratorProcessor = new CCCGeneratorGenerate();
-            CCCGeneratorProcessor.processCCCS();
+		if (CCCGeneratorProcessor == null)
+			CCCGeneratorProcessor = new CCCGeneratorGenerate();
+		CCCGeneratorProcessor.generateCCCNumbers();
 
-    }
+	}
 }
